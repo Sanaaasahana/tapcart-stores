@@ -9,6 +9,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 })
     }
 
+    // Server-side password validation
+    if (password.length < 6 || !/[A-Z]/.test(password)) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters and include one uppercase letter" },
+        { status: 400 }
+      )
+    }
+
     // Demo: store a simple hash placeholder. Replace with bcrypt in real app
     const passwordHash = `sha:${Buffer.from(password).toString("base64")}`
 
