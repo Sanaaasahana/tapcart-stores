@@ -76,11 +76,9 @@ export default function StoreSignupPage() {
               Your store registration has been submitted for approval. You will receive an email notification once your
               account is approved by our admin team.
             </p>
-            <Link href="/store/login">
-              <Button className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700">
-                Back to Login
-              </Button>
-            </Link>
+            <Button onClick={() => (window.location.href = "/store/login")} className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700">
+              Back to Login
+            </Button>
           </CardContent>
         </Card>
       </div>
