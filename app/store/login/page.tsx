@@ -34,7 +34,7 @@ export default function StoreLoginPage() {
       const data = await response.json()
 
       if (response.ok) {
-        router.push("/store/dashboard")
+        router.replace("/store/products")
       } else {
         setError(data.error || "Login failed")
       }
