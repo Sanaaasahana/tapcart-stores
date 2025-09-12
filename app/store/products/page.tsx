@@ -11,6 +11,7 @@ import { Package2, Layers, IndianRupee, Plus, Trash2, Pencil } from "lucide-reac
 
 interface ProductItem {
   id: number
+  customId?: string
   name: string
   category: string
   price: number
@@ -27,12 +28,14 @@ export default function StoreProductsPage() {
   const [loading, setLoading] = useState(false)
 
   const [name, setName] = useState("")
+  const [customId, setCustomId] = useState("")
   const [category, setCategory] = useState("")
   const [price, setPrice] = useState<number | "">("")
   const [quantity, setQuantity] = useState<number | "">(1)
 
   const [editId, setEditId] = useState<number | null>(null)
   const [editName, setEditName] = useState("")
+  const [editCustomId, setEditCustomId] = useState("")
   const [editCategory, setEditCategory] = useState("")
   const [editPrice, setEditPrice] = useState<number | "">("")
 
@@ -60,13 +63,13 @@ export default function StoreProductsPage() {
 
   const submitNew = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name || !category || price === "" || quantity === "") return
+    if (!name || !category || !customId || price === "" || quantity === "") return
     setLoading(true)
     try {
       const response = await fetch("/api/store/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, category, price: Number(price), quantity: Number(quantity) }),
+        body: JSON.stringify({ name, category, customId, price: Number(price), quantity: Number(quantity) }),
       })
       
       if (!response.ok) {
@@ -76,6 +79,7 @@ export default function StoreProductsPage() {
       }
       
       setName("")
+      setCustomId("")
       setCategory("")
       setPrice("")
       setQuantity(1)
@@ -90,6 +94,7 @@ export default function StoreProductsPage() {
   const startEdit = (p: ProductItem) => {
     setEditId(p.id)
     setEditName(p.name)
+    setEditCustomId(p.customId || "")
     setEditCategory(p.category)
     setEditPrice(p.price)
   }
@@ -102,7 +107,7 @@ export default function StoreProductsPage() {
       await fetch("/api/store/products", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editId, name: editName, category: editCategory, price: Number(editPrice) }),
+        body: JSON.stringify({ id: editId, name: editName, customId: editCustomId, category: editCategory, price: Number(editPrice) }),
       })
       setEditId(null)
       await load()
@@ -186,7 +191,11 @@ export default function StoreProductsPage() {
               <CardDescription>Create multiple items by quantity</CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="grid grid-cols-1 md:grid-cols-4 gap-4" onSubmit={submitNew}>
+              <form className="grid grid-cols-1 md:grid-cols-5 gap-4" onSubmit={submitNew}>
+                <div>
+                  <Label htmlFor="customId">Custom ID</Label>
+                  <Input id="customId" value={customId} onChange={(e) => setCustomId(e.target.value)} required />
+                </div>
                 <div>
                   <Label htmlFor="name">Item Name</Label>
                   <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
@@ -203,7 +212,7 @@ export default function StoreProductsPage() {
                   <Label htmlFor="quantity">Quantity</Label>
                   <Input id="quantity" type="number" min={1} value={quantity} onChange={(e) => setQuantity(e.target.value === "" ? "" : Number(e.target.value))} required />
                 </div>
-                <div className="md:col-span-4">
+                <div className="md:col-span-5">
                   <Button type="submit" disabled={loading} className="gap-2">
                     <Plus className="h-4 w-4" /> Add Items
                   </Button>
@@ -223,8 +232,9 @@ export default function StoreProductsPage() {
                   <div key={p.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-200">
                     {editId === p.id ? (
                       <form onSubmit={submitEdit} className="flex flex-col md:flex-row gap-3 w-full">
-                        <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="md:w-1/4" />
-                        <Input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="md:w-1/4" />
+                        <Input value={editCustomId} onChange={(e) => setEditCustomId(e.target.value)} className="md:w-1/5" placeholder="Custom ID" />
+                        <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="md:w-1/5" />
+                        <Input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="md:w-1/5" />
                         <Input type="number" step="0.01" value={editPrice} onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))} className="md:w-1/6" />
                         <div className="ml-auto flex gap-2">
                           <Button type="submit" size="sm">Save</Button>
@@ -234,7 +244,7 @@ export default function StoreProductsPage() {
                     ) : (
                       <>
                         <div className="flex-1">
-                          <div className="font-medium text-slate-900">{p.name}</div>
+                          <div className="font-medium text-slate-900">#{p.customId || p.id} — {p.name}</div>
                           <div className="text-sm text-slate-600">Category: {p.category}</div>
                         </div>
                         <div className="w-24 text-right font-medium">₹{p.price.toFixed(2)}</div>
