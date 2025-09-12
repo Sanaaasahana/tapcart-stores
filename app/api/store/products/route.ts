@@ -21,7 +21,7 @@ export async function GET() {
     await sql`alter table products add column if not exists stock integer default 1`
 
     const items = await sql`select id, store_id, name, coalesce(category,'General') as category, (price::float8) as price, coalesce(stock,1)::int as stock from products where store_id = ${session.storeId} order by id desc`
-    const categoryCounts = await sql`select coalesce(category,'General') as category, count(*)::int as count from products where store_id = ${session.storeId} group by category order by category`
+    const categoryCounts = await sql`select coalesce(category,'General') as category, count(*)::int as count, sum(coalesce(stock,1))::int as total_stock from products where store_id = ${session.storeId} group by category order by category`
 
     return NextResponse.json({ items: items as any, categoryCounts: categoryCounts as any })
   } catch (err) {
