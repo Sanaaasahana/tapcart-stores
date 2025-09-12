@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Store, Calendar, Mail, CheckCircle, Clock, XCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default async function AdminUsersPage() {
   const session = await getAdminSession()
@@ -152,6 +153,27 @@ export default async function AdminUsersPage() {
                     <div className="text-right">
                       <div className="text-sm font-medium text-slate-900">Store ID</div>
                       <div className="text-xs text-slate-500 font-mono">{store.store_id}</div>
+                      {store.status === "approved" && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="mt-2"
+                          onClick={async () => {
+                            const email = store.email
+                            const res = await fetch("/api/admin/approve-store", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ storeId: store.store_id, email, action: "deny", reason: "Access revoked by admin" }),
+                            })
+                            if (res.ok) {
+                              // Soft refresh: mark as denied client-side
+                              location.reload()
+                            }
+                          }}
+                        >
+                          Revoke Access
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
