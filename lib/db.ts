@@ -115,5 +115,20 @@ export async function getPurchasesByStoreId(storeId: string): Promise<Purchase[]
 }
 
 export async function verifyAdminCredentials(email: string, password: string): Promise<boolean> {
-  return email === "sahanapradeep2207@gmail.com" && password === "Sm2226#"
+  const sql = getSql()
+  try {
+    // Ensure pgcrypto exists for crypt() password verification
+    await sql`create extension if not exists pgcrypto`
+  } catch {
+    // ignore if not permitted or already exists
+  }
+
+  const result = await sql<{ exists: boolean }>`
+    select exists (
+      select 1 from admin_users
+      where email = ${email}
+        and password_hash = crypt(${password}, password_hash)
+    ) as exists
+  `
+  return !!result[0]?.exists
 }
