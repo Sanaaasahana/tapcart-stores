@@ -71,10 +71,10 @@ export function ApprovalActions({ storeId, email, onStatusChange }: ApprovalActi
 
         if (action === "approve") {
           const subject = "Your Store Account Has Been Approved"
-          const body = `Hello ${storeId},\n\nYour store registration has been approved. You can login now.\n\nStore ID: ${storeId}\nEmail: ${email}\n\nRegards,\nAdmin`
+          const body = `Hello ${storeId},\n\nYour store registration has been approved. You can login now.\n\nStore ID: ${storeId}\nEmail: ${email}\n\nRegards,\nAdmin, TapCart`
           openGmailCompose(email, subject, body)
         } else {
-          const subject = "Update on Your Store Registration"
+          const subject = "Update on Your Store Registration with TapCart"
           const reasonText = denyReason ? `Reason: ${denyReason}\n\n` : ""
           const body = `Hello ${storeId},\n\nWe are unable to approve your store registration at this time.\n${reasonText}Regards,\nAdmin`
           openGmailCompose(email, subject, body)
@@ -172,3 +172,4 @@ export function ApprovalActions({ storeId, email, onStatusChange }: ApprovalActi
     </div>
   )
 }
+
