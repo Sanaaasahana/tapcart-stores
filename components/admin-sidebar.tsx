@@ -34,9 +34,9 @@ export function AdminSidebar() {
           variant="outline"
           size="icon"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="bg-white/90 backdrop-blur-sm border-slate-200"
+          className="bg-white/90 backdrop-blur-sm border-slate-200 text-black"
         >
-          {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          {isMobileMenuOpen ? <X className="h-4 w-4 text-black" /> : <Menu className="h-4 w-4 text-black" />}
         </Button>
       </div>
 
