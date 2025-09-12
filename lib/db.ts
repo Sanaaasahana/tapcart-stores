@@ -51,8 +51,8 @@ export async function createPendingStore(storeId: string, email: string, passwor
 
 export async function listStores(): Promise<Store[]> {
   const sql = getSql()
-  const rows = await sql<Store>`select id, store_id, email, status, created_at, approved_at from stores order by created_at desc`
-  return rows
+  const rows = await sql`select id, store_id, email, status, created_at, approved_at from stores order by created_at desc`
+  return rows as unknown as Store[]
 }
 
 export async function getAllStores(): Promise<Store[]> {
@@ -71,8 +71,8 @@ export async function approveOrDenyStore(storeId: string, action: "approve" | "d
 // Authentication helpers (demo)
 export async function getStoreByStoreId(storeId: string): Promise<Store | null> {
   const sql = getSql()
-  const rows = await sql<Store>`select id, store_id, email, status, created_at, approved_at from stores where store_id = ${storeId} limit 1`
-  return rows[0] || null
+  const rows = await sql`select id, store_id, email, status, created_at, approved_at from stores where store_id = ${storeId} limit 1`
+  return (rows as any[])[0] || null
 }
 
 export async function verifyStoreCredentials(storeId: string, password: string): Promise<boolean> {
@@ -83,21 +83,30 @@ export async function verifyStoreCredentials(storeId: string, password: string):
 // Products
 export async function getProductsByStoreId(storeId: string): Promise<Product[]> {
   const sql = getSql()
-  const rows = await sql<Product>`select id, store_id, name, stock, price from products where store_id = ${storeId} order by id asc`
-  return rows
+  const rows = await sql`
+    select id,
+           store_id,
+           name,
+           (stock::int)   as stock,
+           (price::float) as price
+    from products
+    where store_id = ${storeId}
+    order by id asc
+  `
+  return rows as unknown as Product[]
 }
 
 // Customers
 export async function getCustomersByStoreId(storeId: string): Promise<Customer[]> {
   const sql = getSql()
-  const rows = await sql<Customer>`select id, store_id, name, phone from customers where store_id = ${storeId} order by id asc`
-  return rows
+  const rows = await sql`select id, store_id, name, phone from customers where store_id = ${storeId} order by id asc`
+  return rows as unknown as Customer[]
 }
 
 // Purchases
 export async function getPurchasesByStoreId(storeId: string): Promise<Purchase[]> {
   const sql = getSql()
-  const rows = await sql<Purchase>`
+  const rows = await sql`
     select p.id,
            p.store_id,
            p.customer_id,
@@ -111,7 +120,7 @@ export async function getPurchasesByStoreId(storeId: string): Promise<Purchase[]
     left join products pr on pr.id = p.product_id
     where p.store_id = ${storeId}
     order by p.purchase_date desc, p.id desc`
-  return rows
+  return rows as unknown as Purchase[]
 }
 
 export async function verifyAdminCredentials(email: string, password: string): Promise<boolean> {
@@ -123,12 +132,12 @@ export async function verifyAdminCredentials(email: string, password: string): P
     // ignore if not permitted or already exists
   }
 
-  const result = await sql<{ exists: boolean }>`
+  const result = await sql`
     select exists (
       select 1 from admin_users
       where email = ${email}
         and password_hash = crypt(${password}, password_hash)
     ) as exists
   `
-  return !!result[0]?.exists
+  return !!(result as any[])[0]?.exists
 }
