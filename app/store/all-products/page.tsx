@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface ProductItem {
   id: number
+  custom_id?: string
   name: string
   category: string
   price: number
@@ -38,7 +39,7 @@ export default function AllProductsPage() {
   const filtered = useMemo(() => {
     return items
       .filter((i) => (category === "all" ? true : i.category === category))
-      .filter((i) => i.name.toLowerCase().includes(search.toLowerCase()) || String(i.id).includes(search))
+      .filter((i) => i.name.toLowerCase().includes(search.toLowerCase()) || String(i.id).includes(search) || (i.custom_id && i.custom_id.toLowerCase().includes(search.toLowerCase())))
   }, [items, search, category])
 
   const categoryTotals = useMemo(() => {
@@ -79,22 +80,20 @@ export default function AllProductsPage() {
             </Select>
           </div>
 
-          <Card className="border-0 shadow-sm mb-8">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold text-slate-900">Totals by Category</CardTitle>
-              <CardDescription>Number of items and total stock remaining per category</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {categoryTotals.map((c) => (
-                  <Badge key={c.category} className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                    {c.category}: {c.items} items • {c.stock} stock
-                  </Badge>
-                ))}
-                {categoryTotals.length === 0 && <span className="text-slate-500 text-sm">No data</span>}
-              </div>
-            </CardContent>
-          </Card>
+          {category !== "all" && (
+            <Card className="border-0 shadow-sm mb-8">
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-slate-900">{category} Category</CardTitle>
+                <CardDescription>Items in this category with quantities</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-slate-600 mb-4">
+                  Total items: {categoryTotals.find(c => c.category === category)?.items || 0} • 
+                  Total stock: {categoryTotals.find(c => c.category === category)?.stock || 0}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="border-0 shadow-sm">
             <CardHeader>
@@ -105,7 +104,7 @@ export default function AllProductsPage() {
               <div className="space-y-3">
                 {filtered.map((p) => (
                   <div key={p.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-200">
-                    <div className="font-medium text-slate-900">#{p.id} — {p.name}</div>
+                    <div className="font-medium text-slate-900">#{p.custom_id || p.id} — {p.name}</div>
                     <div className="text-slate-600">{p.category}</div>
                     <div className="text-slate-900 font-medium">₹{p.price.toFixed(2)}</div>
                     <div className="text-slate-600">Stock: {p.stock}</div>
