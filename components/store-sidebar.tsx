@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils"
 import { Users, ShoppingCart, Menu, X, LogOut, Store, Package2 } from "lucide-react"
 
 const navigation = [
-  { name: "Products", href: "/store/products", icon: Package2 },
+  { name: "Inventory", href: "/store/products", icon: Package2 },
+  { name: "All Products", href: "/store/all-products", icon: Package2 },
   { name: "Customers", href: "/store/customers", icon: Users },
   { name: "Purchases", href: "/store/purchases", icon: ShoppingCart },
 ]
