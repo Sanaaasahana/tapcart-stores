@@ -15,25 +15,6 @@ export default async function AdminUsersPage() {
 
   const stores = await getAllStores()
 
-  // Mock additional stores for demo
-  const allStores = [
-    ...stores,
-    {
-      id: 2,
-      store_id: "TECH001",
-      email: "tech@store.com",
-      status: "pending" as const,
-      created_at: "2024-01-20T10:30:00Z",
-    },
-    {
-      id: 3,
-      store_id: "FASHION02",
-      email: "fashion@boutique.com",
-      status: "pending" as const,
-      created_at: "2024-01-21T14:15:00Z",
-    },
-  ]
-
   return (
     <div className="min-h-screen bg-slate-50">
       <AdminSidebar />
@@ -45,7 +26,7 @@ export default async function AdminUsersPage() {
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Store Users</h1>
             <p className="text-slate-600">Manage all registered store accounts and their status</p>
           </div>
-          <AdminUsersClient stores={allStores} />
+          <AdminUsersClient stores={stores} />
         </div>
       </div>
     </div>
