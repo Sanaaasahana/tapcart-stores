@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Clock, Users, Store, AlertTriangle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 
 interface StoreItem {
@@ -27,6 +28,7 @@ function calcCounts(items: StoreItem[]) {
 export default function AdminDashboardPage() {
   const [stores, setStores] = useState<StoreItem[]>([])
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const { toast } = useToast()
 
   const loadStores = async () => {
     setIsRefreshing(true)
@@ -34,7 +36,7 @@ export default function AdminDashboardPage() {
       const res = await fetch("/api/store/auth/signup", { method: "GET" })
       const data = await res.json()
       const list: StoreItem[] = (data?.stores || []).map((s: any, i: number) => ({
-        id: String(i) + ":" + s.store_id ?? s.storeId,
+        id: String(i) + ":" + (s.store_id ?? s.storeId),
         storeId: s.store_id ?? s.storeId,
         email: s.email,
         status: s.status,
@@ -54,6 +56,7 @@ export default function AdminDashboardPage() {
 
   const counts = calcCounts(stores)
   const visible = stores.filter((s) => s.status === "pending")
+  const activeStores = stores.filter((s) => s.status === "approved")
 
   const handleRefresh = async () => {
     await loadStores()
@@ -63,6 +66,26 @@ export default function AdminDashboardPage() {
     setStores((prev) =>
       prev.map((s) => (s.storeId === resolvedStoreId ? { ...s, status: action === "approve" ? "approved" : "denied" } : s))
     )
+  }
+
+  const revokeAccess = async (storeId: string, email: string) => {
+    if (!confirm(`Revoke access for ${storeId}?`)) return
+    try {
+      const res = await fetch("/api/admin/approve-store", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId, email, action: "deny", reason: "Access revoked by admin" }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast({ title: "Access revoked", description: `${storeId} has been set to denied` })
+        setStores((prev) => prev.map((s) => (s.storeId === storeId ? { ...s, status: "denied" } : s)))
+      } else {
+        toast({ title: "Error", description: data.error || "Failed to revoke access", variant: "destructive" })
+      }
+    } catch (e) {
+      toast({ title: "Network error", description: "Please try again.", variant: "destructive" })
+    }
   }
 
   return (
@@ -156,7 +179,6 @@ export default function AdminDashboardPage() {
                     <ApprovalActions
                       storeId={store.storeId}
                       email={store.email}
-                      onResolved={(resolvedId) => handleResolved(resolvedId, "approve")}
                       onStatusChange={handleRefresh}
                     />
                   </div>
@@ -168,6 +190,41 @@ export default function AdminDashboardPage() {
                     <h3 className="text-lg font-medium text-slate-900 mb-2">All caught up!</h3>
                     <p className="text-slate-500">No pending store approvals at the moment.</p>
                   </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Active Stores - Revoke Access */}
+          <Card className="border-0 shadow-sm mt-8">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Store className="h-5 w-5 text-green-600" />
+                Active Stores
+              </CardTitle>
+              <CardDescription>Revoke access for previously approved stores</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {activeStores.map((store) => (
+                  <div
+                    key={store.id}
+                    className="flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-sm transition-all duration-200"
+                  >
+                    <div>
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="font-semibold text-slate-900">{store.storeId}</h3>
+                        <Badge className="bg-green-100 text-green-700">Approved</Badge>
+                      </div>
+                      <div className="text-sm text-slate-600">{store.email}</div>
+                    </div>
+                    <Button variant="destructive" size="sm" onClick={() => revokeAccess(store.storeId, store.email)}>
+                      Revoke Access
+                    </Button>
+                  </div>
+                ))}
+                {activeStores.length === 0 && (
+                  <div className="text-center py-12 text-slate-500">No active stores.</div>
                 )}
               </div>
             </CardContent>
