@@ -133,7 +133,7 @@ export default function StoreProductsPage() {
         <div className="p-6 lg:p-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Products</h1>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Inventory</h1>
             <p className="text-slate-600">Manage your items and category counts</p>
           </div>
 
@@ -239,7 +239,7 @@ export default function StoreProductsPage() {
                         </div>
                         <div className="w-24 text-right font-medium">₹{p.price.toFixed(2)}</div>
                         <div className="ml-4 flex gap-2">
-                          <Button variant="outline" size="icon" onClick={() => startEdit(p)}>
+                          <Button variant="outline" size="icon" className="text-white bg-slate-900 hover:bg-slate-800" onClick={() => startEdit(p)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button variant="destructive" size="icon" onClick={() => remove(p.id)}>
