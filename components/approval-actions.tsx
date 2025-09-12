@@ -69,10 +69,9 @@ export function ApprovalActions({ storeId, email, onStatusChange }: ApprovalActi
         setDenyReason("")
         onStatusChange?.()
 
-        const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000") + "/store/login"
         if (action === "approve") {
           const subject = "Your Store Account Has Been Approved"
-          const body = `Hello ${storeId},\n\nYour store registration has been approved. You can now log in to your dashboard here: ${baseUrl}\n\nStore ID: ${storeId}\nEmail: ${email}\n\nRegards,\nAdmin`
+          const body = `Hello ${storeId},\n\nYour store registration has been approved. You can login now.\n\nStore ID: ${storeId}\nEmail: ${email}\n\nRegards,\nAdmin`
           openGmailCompose(email, subject, body)
         } else {
           const subject = "Update on Your Store Registration"
