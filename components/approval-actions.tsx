@@ -69,26 +69,14 @@ export function ApprovalActions({ storeId, email, onStatusChange }: ApprovalActi
         setDenyReason("")
         onStatusChange?.()
 
-       if (action === "approve") {
-  const subject = "Your Store Account Has Been Approved"
-  const body = `
-    <p>Hello ${storeId},</p>
-    <p>Your store registration has been approved. You can login now at 
-      <a href="https://nfc-trial.onrender.com">https://nfc-trial.onrender.com</a>.
-    </p>
-    <p>
-      <strong>Store ID:</strong> ${storeId}<br>
-      <strong>Email:</strong> ${email}
-    </p>
-    <p>Regards,<br>Admin, TapCart</p>
-  `
-  openGmailCompose(email, subject, body, true) // <- pass flag that it’s HTML
-}
-
-         else {
-          const subject = "Update on Your Store Registration with TapCart"
+        if (action === "approve") {
+          const subject = "Your Store Account Has Been Approved"
+          const body = `Hello ${storeId},\n\nYour store registration has been approved. You can login now at https://nfc-trial.onrender.com.\n\nStore ID: ${storeId}\nEmail: ${email}\n\nRegards,\nAdmin, TapCart`
+          openGmailCompose(email, subject, body)
+        } else {
+          const subject = "Update on Your Store Registration"
           const reasonText = denyReason ? `Reason: ${denyReason}\n\n` : ""
-          const body = `Hello ${storeId},\n\nWe are unable to approve your store registration at this time.\n${reasonText}Regards,\nAdmin`
+          const body = `Hello ${storeId},\n\nWe are unable to approve your store registration at this time.\n${reasonText}Regards,\nAdmin, TapCart`
           openGmailCompose(email, subject, body)
         }
       } else {
@@ -184,5 +172,3 @@ export function ApprovalActions({ storeId, email, onStatusChange }: ApprovalActi
     </div>
   )
 }
-
-
