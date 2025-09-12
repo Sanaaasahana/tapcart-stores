@@ -18,6 +18,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Prevent static optimization issues when child routes use server data
+  // by opting the app into dynamic rendering.
+  // This is safe here because we rely on authenticated, per-user data.
+  // If you later add fully static pages, you can override with export const dynamic = "force-static" in those pages.
+  // @ts-expect-error next-dynamic-flag
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  ;(globalThis as any).NEXT_DYNAMIC_FLAG = true
   return (
     <html lang="en">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
