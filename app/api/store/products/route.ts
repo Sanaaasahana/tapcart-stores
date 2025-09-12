@@ -20,7 +20,7 @@ export async function GET() {
     await sql`alter table products add column if not exists category varchar(100) default 'General'`
     await sql`alter table products add column if not exists stock integer default 1`
 
-    const items = await sql`select id, store_id, name, coalesce(category,'General') as category, (price::float8) as price, coalesce(stock,1)::int as stock from products where store_id = ${session.storeId} order by id desc`
+    const items = await sql`select id, store_id, name, coalesce(category,'General') as category, custom_id, (price::float8) as price, coalesce(stock,1)::int as stock from products where store_id = ${session.storeId} order by id desc`
     const categoryCounts = await sql`select coalesce(category,'General') as category, count(*)::int as count, sum(coalesce(stock,1))::int as total_stock from products where store_id = ${session.storeId} group by category order by category`
 
     return NextResponse.json({ items: items as any, categoryCounts: categoryCounts as any })
@@ -36,17 +36,25 @@ export async function POST(request: NextRequest) {
     if (!session?.isAuthenticated) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-    const { name, category, price, quantity } = await request.json()
-    if (!name || !category || typeof price !== "number" || !quantity || quantity < 1) {
+    const { name, category, customId, price, quantity } = await request.json()
+    if (!name || !category || !customId || typeof price !== "number" || !quantity || quantity < 1) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 })
     }
     const sql = getSql()
     await sql`alter table products add column if not exists category varchar(100) default 'General'`
+    await sql`alter table products add column if not exists custom_id varchar(50)`
+    await sql`alter table products add column if not exists stock integer default 1`
+
+    // Check if custom ID already exists for this store
+    const existing = await sql`select 1 from products where store_id = ${session.storeId} and custom_id = ${customId} limit 1`
+    if (existing.length > 0) {
+      return NextResponse.json({ error: "Custom ID already exists" }, { status: 400 })
+    }
 
     // Insert N rows (each item unique id), stock=1 per spec
     for (let i = 0; i < quantity; i++) {
       // default stock=1 to keep compatibility with dashboard
-      await sql`insert into products (store_id, name, category, price, stock) values (${session.storeId}, ${name}, ${category}, ${price}, 1)`
+      await sql`insert into products (store_id, name, category, custom_id, price, stock) values (${session.storeId}, ${name}, ${category}, ${customId}, ${price}, 1)`
     }
 
     return NextResponse.json({ success: true })
@@ -62,12 +70,21 @@ export async function PATCH(request: NextRequest) {
     if (!session?.isAuthenticated) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-    const { id, name, category, price } = await request.json()
+    const { id, name, customId, category, price } = await request.json()
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
     const sql = getSql()
     await sql`alter table products add column if not exists category varchar(100) default 'General'`
+    await sql`alter table products add column if not exists custom_id varchar(50)`
 
-    await sql`update products set name = coalesce(${name}, name), category = coalesce(${category}, category), price = coalesce(${price}, price) where id = ${id} and store_id = ${session.storeId}`
+    // Check if custom ID already exists for this store (excluding current item)
+    if (customId) {
+      const existing = await sql`select 1 from products where store_id = ${session.storeId} and custom_id = ${customId} and id != ${id} limit 1`
+      if (existing.length > 0) {
+        return NextResponse.json({ error: "Custom ID already exists" }, { status: 400 })
+      }
+    }
+
+    await sql`update products set name = coalesce(${name}, name), custom_id = coalesce(${customId}, custom_id), category = coalesce(${category}, category), price = coalesce(${price}, price) where id = ${id} and store_id = ${session.storeId}`
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error("Products PATCH error", err)
