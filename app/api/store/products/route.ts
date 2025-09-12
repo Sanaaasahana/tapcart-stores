@@ -18,11 +18,12 @@ export async function GET() {
 
     // Ensure category column exists
     await sql`alter table products add column if not exists category varchar(100) default 'General'`
+    await sql`alter table products add column if not exists stock integer default 1`
 
-    const items = await sql<any[]>`select id, store_id, name, coalesce(category,'General') as category, price, coalesce(stock,1) as stock from products where store_id = ${session.storeId} order by id desc`
-    const categoryCounts = await sql<{ category: string; count: number }[]>`select coalesce(category,'General') as category, count(*)::int as count from products where store_id = ${session.storeId} group by category order by category`
+    const items = await sql`select id, store_id, name, coalesce(category,'General') as category, (price::float8) as price, coalesce(stock,1)::int as stock from products where store_id = ${session.storeId} order by id desc`
+    const categoryCounts = await sql`select coalesce(category,'General') as category, count(*)::int as count from products where store_id = ${session.storeId} group by category order by category`
 
-    return NextResponse.json({ items, categoryCounts })
+    return NextResponse.json({ items: items as any, categoryCounts: categoryCounts as any })
   } catch (err) {
     console.error("Products GET error", err)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
