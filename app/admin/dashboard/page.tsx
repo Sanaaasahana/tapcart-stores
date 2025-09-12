@@ -102,7 +102,7 @@ export default function AdminDashboardPage() {
             </div>
             <div className="flex items-center gap-2">
               <Link href="/">
-                <Button variant="outline" size="sm">Back to Home</Button>
+                <Button variant="outline" size="sm" onClick={(e) => { e.preventDefault(); window.location.href = "/" }}>Back to Home</Button>
               </Link>
               <Button onClick={handleRefresh} disabled={isRefreshing} variant="outline" size="sm">
                 <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
