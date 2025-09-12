@@ -15,6 +15,7 @@ import Link from "next/link"
 export default function StoreSignupPage() {
   const [storeId, setStoreId] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -25,6 +26,19 @@ export default function StoreSignupPage() {
     e.preventDefault()
     setIsLoading(true)
     setError("")
+
+    const hasUppercase = /[A-Z]/.test(password)
+    if (password.length < 6 || !hasUppercase) {
+      setIsLoading(false)
+      setError("Password must be at least 6 characters and include one uppercase letter")
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setIsLoading(false)
+      setError("Passwords do not match")
+      return
+    }
 
     try {
       const response = await fetch("/api/store/auth/signup", {
@@ -138,6 +152,25 @@ export default function StoreSignupPage() {
                   placeholder="Create a secure password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                  required
+                />
+                <p className="mt-1 text-xs text-slate-500">Minimum 6 characters, include at least one uppercase letter.</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-slate-700 font-medium">
+                Confirm Password
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Re-enter your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pl-10 h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
                   required
                 />
