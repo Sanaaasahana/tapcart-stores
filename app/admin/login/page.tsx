@@ -12,16 +12,18 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Shield, Lock, Mail } from "lucide-react"
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState("sahanapradeep2207@gmail.com")
+  const [password, setPassword] = useState("Sm2226#")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [setupMessage, setSetupMessage] = useState("")
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
+    setSetupMessage("")
 
     try {
       const response = await fetch("/api/admin/auth/login", {
@@ -39,6 +41,30 @@ export default function AdminLoginPage() {
       }
     } catch (error) {
       setError("Network error. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSetup = async () => {
+    setIsLoading(true)
+    setError("")
+    setSetupMessage("")
+
+    try {
+      const response = await fetch("/api/admin/setup", {
+        method: "POST",
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSetupMessage(data.message)
+      } else {
+        setError(data.error || "Setup failed")
+      }
+    } catch (error) {
+      setError("Network error during setup. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -103,6 +129,12 @@ export default function AdminLoginPage() {
               </Alert>
             )}
 
+            {setupMessage && (
+              <Alert className="border-green-200 bg-green-50">
+                <AlertDescription className="text-green-700">{setupMessage}</AlertDescription>
+              </Alert>
+            )}
+
             <Button
               type="submit"
               disabled={isLoading}
@@ -116,6 +148,16 @@ export default function AdminLoginPage() {
               ) : (
                 "Access Admin Panel"
               )}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSetup}
+              disabled={isLoading}
+              className="w-full h-10"
+            >
+              Setup Admin User
             </Button>
           </form>
 
