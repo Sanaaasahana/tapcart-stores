@@ -110,7 +110,7 @@ export default function StoreLoginPage() {
               <div>
                 <h3 className="text-sm font-medium text-slate-900">Bulk Upload Products</h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  Upload CSV or Excel file with product details
+                  Upload CSV file with product details
                 </p>
                 <a 
                   href="data:text/csv;charset=utf-8,name,category,customid,price,quantity%0ASample%20Product,Electronics,PROD001,99.99,5%0AAnother%20Product,Clothing,PROD002,49.99,10" 
@@ -124,7 +124,7 @@ export default function StoreLoginPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".csv,.xlsx,.xls"
+                accept=".csv"
                 onChange={handleFileUpload}
                 className="hidden"
               />
