@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { StoreSidebar } from "@/components/store-sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Package2, Layers, IndianRupee, Plus, Trash2, Pencil, Search, Filter, Eye, AlertTriangle, TrendingUp, BarChart3 } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Package2, Layers, IndianRupee, Plus, Trash2, Pencil, Search, Filter, Eye, AlertTriangle, TrendingUp, BarChart3, Upload, FileText, CheckCircle } from "lucide-react"
 
 interface ProductItem {
   id: number
@@ -44,6 +45,12 @@ export default function StoreProductsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [viewMode, setViewMode] = useState<"grid" | "table">("table")
+
+  // File upload states
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadMessage, setUploadMessage] = useState("")
+  const [showUploadSuccess, setShowUploadSuccess] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const load = async () => {
     setLoading(true)
@@ -152,6 +159,46 @@ export default function StoreProductsPage() {
   const lowStockItems = items.filter(item => item.stock < 10)
   const outOfStockItems = items.filter(item => item.stock === 0)
 
+  // File upload handler
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    setUploadMessage("")
+    setShowUploadSuccess(false)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch("/api/store/products/bulk-upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setUploadMessage(data.message)
+        setShowUploadSuccess(true)
+        if (data.errors && data.errors.length > 0) {
+          setUploadMessage(data.message + "\nErrors: " + data.errors.join(", "))
+        }
+        // Reload products after successful upload
+        await load()
+      } else {
+        setUploadMessage(data.error || "Upload failed")
+        setShowUploadSuccess(false)
+      }
+    } catch (error) {
+      setUploadMessage("Network error during upload. Please try again.")
+      setShowUploadSuccess(false)
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <StoreSidebar />
@@ -236,7 +283,7 @@ export default function StoreProductsPage() {
           </div>
 
           {/* Add Item */}
-          <Card className="border-0 shadow-sm mb-8">
+          <Card className="border-0 shadow-sm mb-6">
             <CardHeader>
               <CardTitle className="text-xl font-bold text-slate-900">Add Items</CardTitle>
               <CardDescription>Create multiple items by quantity</CardDescription>
@@ -269,6 +316,80 @@ export default function StoreProductsPage() {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+
+          {/* Bulk Upload Section */}
+          <Card className="border-0 shadow-sm mb-8">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-slate-900">Bulk Upload Products</CardTitle>
+              <CardDescription>Upload CSV file to add multiple products at once</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center">
+                      <div className="mx-auto w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mb-4">
+                        <Upload className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="text-sm font-medium text-slate-900 mb-2">Upload CSV File</h3>
+                      <p className="text-xs text-slate-500 mb-4">
+                        Upload a CSV file with product details (name, category, customid, price, quantity)
+                      </p>
+                      
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".csv"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                      
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="gap-2 mb-3"
+                      >
+                        {isUploading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="h-4 w-4" />
+                            Choose CSV File
+                          </>
+                        )}
+                      </Button>
+                      
+                      <div className="text-xs">
+                        <a 
+                          href="data:text/csv;charset=utf-8,name,category,customid,price,quantity%0ASample%20Product,Electronics,PROD001,99.99,5%0AAnother%20Product,Clothing,PROD002,49.99,10" 
+                          download="product-template.csv"
+                          className="text-blue-600 hover:text-blue-700 underline"
+                        >
+                          Download CSV template
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {uploadMessage && (
+                  <Alert className={`${showUploadSuccess ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                    <div className="flex items-center gap-2">
+                      {showUploadSuccess && <CheckCircle className="h-4 w-4 text-green-600" />}
+                      <AlertDescription className={showUploadSuccess ? 'text-green-700' : 'text-red-700'}>
+                        <pre className="whitespace-pre-wrap text-sm">{uploadMessage}</pre>
+                      </AlertDescription>
+                    </div>
+                  </Alert>
+                )}
+              </div>
             </CardContent>
           </Card>
 
