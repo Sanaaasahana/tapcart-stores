@@ -5,13 +5,14 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Users, ShoppingCart, Menu, X, LogOut, Store, Package2 } from "lucide-react"
+import { Users, ShoppingCart, Menu, X, LogOut, Store, Package2, Download } from "lucide-react"
 
 const navigation = [
   { name: "Inventory", href: "/store/products", icon: Package2 },
   { name: "All Products", href: "/store/all-products", icon: Package2 },
   { name: "Customers", href: "/store/customers", icon: Users },
   { name: "Purchases", href: "/store/purchases", icon: ShoppingCart },
+  { name: "Export Links", href: "/store/export", icon: Download },
 ]
 
 export function StoreSidebar() {
