@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Package2, Layers, IndianRupee, Plus, Trash2, Pencil } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Package2, Layers, IndianRupee, Plus, Trash2, Pencil, Search, Filter, Eye, AlertTriangle, TrendingUp, BarChart3 } from "lucide-react"
 
 interface ProductItem {
   id: number
@@ -38,6 +39,11 @@ export default function StoreProductsPage() {
   const [editCustomId, setEditCustomId] = useState("")
   const [editCategory, setEditCategory] = useState("")
   const [editPrice, setEditPrice] = useState<number | "">("")
+
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
+  const [viewMode, setViewMode] = useState<"grid" | "table">("table")
 
   const load = async () => {
     setLoading(true)
@@ -130,6 +136,22 @@ export default function StoreProductsPage() {
     }
   }
 
+  // Filter and search logic
+  const filteredItems = items.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.customId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.category.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesCategory = selectedCategory === "all" || item.category === selectedCategory
+    
+    return matchesSearch && matchesCategory
+  })
+
+  // Calculate statistics
+  const totalValue = items.reduce((sum, item) => sum + item.price, 0)
+  const lowStockItems = items.filter(item => item.stock < 10)
+  const outOfStockItems = items.filter(item => item.stock === 0)
+
   return (
     <div className="min-h-screen bg-slate-50">
       <StoreSidebar />
@@ -138,19 +160,42 @@ export default function StoreProductsPage() {
         <div className="p-6 lg:p-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Inventory</h1>
-            <p className="text-slate-600">Manage your items and category counts</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900 mb-2">Inventory Management</h1>
+                <p className="text-slate-600">Track and manage your product stock levels</p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={viewMode === "table" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("table")}
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Table
+                </Button>
+                <Button
+                  variant={viewMode === "grid" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                >
+                  <Package2 className="h-4 w-4 mr-2" />
+                  Grid
+                </Button>
+              </div>
+            </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Enhanced Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-cyan-50">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Total Items</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">Total Products</CardTitle>
                 <Package2 className="h-4 w-4 text-blue-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-slate-900">{items.length}</div>
+                <p className="text-xs text-slate-500 mt-1">Active items in inventory</p>
               </CardContent>
             </Card>
 
@@ -160,26 +205,32 @@ export default function StoreProductsPage() {
                 <Layers className="h-4 w-4 text-emerald-600" />
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {categoryCounts.map((c) => (
-                    <Badge key={c.category} className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-                      {c.category}: {c.count}
-                    </Badge>
-                  ))}
-                  {categoryCounts.length === 0 && <span className="text-slate-500 text-sm">No categories yet</span>}
-                </div>
+                <div className="text-2xl font-bold text-slate-900">{categoryCounts.length}</div>
+                <p className="text-xs text-slate-500 mt-1">Product categories</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-sm bg-gradient-to-br from-orange-50 to-red-50">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600">Low Stock Alert</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-orange-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-slate-900">{lowStockItems.length}</div>
+                <p className="text-xs text-slate-500 mt-1">Items below 10 units</p>
               </CardContent>
             </Card>
 
             <Card className="border-0 shadow-sm bg-gradient-to-br from-purple-50 to-pink-50">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Value (₹)</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">Total Value</CardTitle>
                 <IndianRupee className="h-4 w-4 text-purple-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-slate-900">
-                  ₹{items.reduce((s, p) => s + (p.price ?? 0), 0).toFixed(2)}
+                  ₹{totalValue.toFixed(2)}
                 </div>
+                <p className="text-xs text-slate-500 mt-1">Inventory worth</p>
               </CardContent>
             </Card>
           </div>
@@ -221,47 +272,196 @@ export default function StoreProductsPage() {
             </CardContent>
           </Card>
 
+          {/* Search and Filter */}
+          <Card className="border-0 shadow-sm mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-slate-900">Search & Filter</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                  <Input
+                    placeholder="Search products, IDs, or categories..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger>
+                      <Filter className="w-4 h-4 mr-2" />
+                      <SelectValue placeholder="Filter by category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categoryCounts.map((category) => (
+                        <SelectItem key={category.category} value={category.category}>
+                          {category.category} ({category.count})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    Showing {filteredItems.length} of {items.length} items
+                  </Badge>
+                  {lowStockItems.length > 0 && (
+                    <Badge variant="destructive" className="text-xs">
+                      {lowStockItems.length} low stock
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Items List */}
           <Card className="border-0 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-xl font-bold text-slate-900">Items</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl font-bold text-slate-900">Product Inventory</CardTitle>
+                <div className="flex gap-2">
+                  {lowStockItems.length > 0 && (
+                    <Badge variant="destructive" className="gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      Low Stock Alert
+                    </Badge>
+                  )}
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {items.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-200">
-                    {editId === p.id ? (
-                      <form onSubmit={submitEdit} className="flex flex-col md:flex-row gap-3 w-full">
-                        <Input value={editCustomId} onChange={(e) => setEditCustomId(e.target.value)} className="md:w-1/5" placeholder="Custom ID" />
-                        <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="md:w-1/5" />
-                        <Input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="md:w-1/5" />
-                        <Input type="number" step="0.01" value={editPrice} onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))} className="md:w-1/6" />
-                        <div className="ml-auto flex gap-2">
-                          <Button type="submit" size="sm">Save</Button>
-                          <Button type="button" variant="outline" size="sm" onClick={() => setEditId(null)}>Cancel</Button>
-                        </div>
-                      </form>
-                    ) : (
-                      <>
+              {viewMode === "table" ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-slate-200">
+                        <th className="text-left py-3 px-4 font-medium text-slate-600">Product</th>
+                        <th className="text-left py-3 px-4 font-medium text-slate-600">Category</th>
+                        <th className="text-left py-3 px-4 font-medium text-slate-600">Price</th>
+                        <th className="text-left py-3 px-4 font-medium text-slate-600">Stock</th>
+                        <th className="text-left py-3 px-4 font-medium text-slate-600">Status</th>
+                        <th className="text-left py-3 px-4 font-medium text-slate-600">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredItems.map((p) => (
+                        <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50">
+                          <td className="py-4 px-4">
+                            <div className="font-medium text-slate-900">{p.name}</div>
+                            <div className="text-sm text-slate-500">#{p.customId || p.id}</div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <Badge variant="secondary" className="text-xs">
+                              {p.category}
+                            </Badge>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className="font-medium text-slate-900">₹{p.price.toFixed(2)}</span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className={`font-medium ${p.stock < 10 ? 'text-red-600' : 'text-slate-900'}`}>
+                              {p.stock} units
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <Badge
+                              variant={p.stock === 0 ? "destructive" : p.stock < 10 ? "secondary" : "default"}
+                              className={
+                                p.stock === 0
+                                  ? "bg-red-100 text-red-700 hover:bg-red-100"
+                                  : p.stock < 10
+                                    ? "bg-orange-100 text-orange-700 hover:bg-orange-100"
+                                    : "bg-green-100 text-green-700 hover:bg-green-100"
+                              }
+                            >
+                              {p.stock === 0 ? "Out of Stock" : p.stock < 10 ? "Low Stock" : "In Stock"}
+                            </Badge>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm" onClick={() => startEdit(p)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button variant="destructive" size="sm" onClick={() => remove(p.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredItems.map((p) => (
+                    <div key={p.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
-                          <div className="font-medium text-slate-900">#{p.customId || p.id} — {p.name}</div>
-                          <div className="text-sm text-slate-600">Category: {p.category}</div>
+                          <h3 className="font-medium text-slate-900 mb-1">{p.name}</h3>
+                          <p className="text-sm text-slate-500">#{p.customId || p.id}</p>
                         </div>
-                        <div className="w-24 text-right font-medium">₹{p.price.toFixed(2)}</div>
-                        <div className="ml-4 flex gap-2">
-                          <Button variant="outline" size="icon" className="text-white bg-slate-900 hover:bg-slate-800" onClick={() => startEdit(p)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="destructive" size="icon" onClick={() => remove(p.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <Badge
+                          variant={p.stock === 0 ? "destructive" : p.stock < 10 ? "secondary" : "default"}
+                          className={
+                            p.stock === 0
+                              ? "bg-red-100 text-red-700 hover:bg-red-100"
+                              : p.stock < 10
+                                ? "bg-orange-100 text-orange-700 hover:bg-orange-100"
+                                : "bg-green-100 text-green-700 hover:bg-green-100"
+                          }
+                        >
+                          {p.stock === 0 ? "Out" : p.stock < 10 ? "Low" : "In Stock"}
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-2 mb-4">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">Category:</span>
+                          <Badge variant="outline" className="text-xs">{p.category}</Badge>
                         </div>
-                      </>
-                    )}
-                  </div>
-                ))}
-                {items.length === 0 && <div className="text-center text-slate-500 py-10">No items yet</div>}
-              </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">Price:</span>
+                          <span className="font-medium">₹{p.price.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">Stock:</span>
+                          <span className={`font-medium ${p.stock < 10 ? 'text-red-600' : 'text-slate-900'}`}>
+                            {p.stock} units
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => startEdit(p)} className="flex-1">
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => remove(p.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {filteredItems.length === 0 && (
+                <div className="text-center py-10">
+                  <Package2 className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+                  <h3 className="text-lg font-medium text-slate-900 mb-2">No products found</h3>
+                  <p className="text-slate-500">
+                    {items.length === 0 
+                      ? "Get started by adding your first product above."
+                      : "Try adjusting your search or filter criteria."
+                    }
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
