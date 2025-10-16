@@ -22,41 +22,57 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 })
     }
 
-    // Validate file type
+    // Validate file type - Only CSV for now to avoid xlsx dependency issues
     const allowedTypes = [
       'text/csv',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      'application/csv'
     ]
     
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ error: "Invalid file type. Please upload CSV or Excel files." }, { status: 400 })
+    if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.csv')) {
+      return NextResponse.json({ error: "Invalid file type. Please upload CSV files only." }, { status: 400 })
     }
 
     const arrayBuffer = await file.arrayBuffer()
     let jsonData: any[] = []
 
-    // Parse file based on type
-    if (file.type === 'text/csv') {
-      const text = new TextDecoder().decode(arrayBuffer)
-      const lines = text.split('\n').filter(line => line.trim())
-      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
+    // Parse CSV file with better CSV handling
+    const text = new TextDecoder().decode(arrayBuffer)
+    const lines = text.split(/\r?\n/).filter(line => line.trim())
+    
+    if (lines.length < 2) {
+      return NextResponse.json({ error: "File must contain at least a header row and one data row." }, { status: 400 })
+    }
+    
+    // Parse CSV headers - handle quoted values better
+    const parseCSVLine = (line: string): string[] => {
+      const result: string[] = []
+      let current = ''
+      let inQuotes = false
       
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''))
-        const row: any = {}
-        headers.forEach((header, index) => {
-          row[header.toLowerCase()] = values[index] || ''
-        })
-        jsonData.push(row)
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i]
+        if (char === '"') {
+          inQuotes = !inQuotes
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim())
+          current = ''
+        } else {
+          current += char
+        }
       }
-    } else {
-      // Excel file
-      const XLSX = await import('xlsx')
-      const workbook = XLSX.read(arrayBuffer)
-      const sheetName = workbook.SheetNames[0]
-      const worksheet = workbook.Sheets[sheetName]
-      jsonData = XLSX.utils.sheet_to_json(worksheet)
+      result.push(current.trim())
+      return result
+    }
+    
+    const headers = parseCSVLine(lines[0]).map(h => h.replace(/"/g, '').toLowerCase())
+    
+    for (let i = 1; i < lines.length; i++) {
+      const values = parseCSVLine(lines[i]).map(v => v.replace(/"/g, ''))
+      const row: any = {}
+      headers.forEach((header, index) => {
+        row[header] = values[index] || ''
+      })
+      jsonData.push(row)
     }
 
     // Validate required columns
