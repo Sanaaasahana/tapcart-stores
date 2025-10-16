@@ -7,6 +7,17 @@ function getSql() {
   return neon(url)
 }
 
+// Simple password hash function (for demo purposes)
+function simpleHash(password: string): string {
+  let hash = 0
+  for (let i = 0; i < password.length; i++) {
+    const char = password.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Convert to 32-bit integer
+  }
+  return hash.toString()
+}
+
 export async function POST() {
   try {
     const sql = getSql()
@@ -21,10 +32,8 @@ export async function POST() {
       )
     `
     
-    // Hash the password using bcrypt
-    const bcrypt = await import('bcrypt')
-    const saltRounds = 10
-    const hashedPassword = await bcrypt.hash('Sm2226#', saltRounds)
+    // Use simple hash for demo (in production, use proper hashing)
+    const hashedPassword = simpleHash('Sm2226#')
     
     // Insert or update admin user
     await sql`
