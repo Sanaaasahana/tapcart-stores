@@ -2,14 +2,14 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Store, Lock, User } from "lucide-react"
+import { Loader2, Store, Lock, User, Upload, FileText, CheckCircle } from "lucide-react"
 import Link from "next/link"
 
 export default function StoreLoginPage() {
@@ -17,6 +17,10 @@ export default function StoreLoginPage() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadMessage, setUploadMessage] = useState("")
+  const [showUploadSuccess, setShowUploadSuccess] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,6 +49,42 @@ export default function StoreLoginPage() {
     }
   }
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    setUploadMessage("")
+    setError("")
+    setShowUploadSuccess(false)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch("/api/store/products/bulk-upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setUploadMessage(data.message)
+        setShowUploadSuccess(true)
+        if (data.errors && data.errors.length > 0) {
+          setUploadMessage(data.message + "\nErrors: " + data.errors.join(", "))
+        }
+      } else {
+        setError(data.error || "Upload failed")
+      }
+    } catch (error) {
+      setError("Network error during upload. Please try again.")
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[length:20px_20px] opacity-30"></div>
@@ -61,7 +101,78 @@ export default function StoreLoginPage() {
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {/* File Upload Section */}
+          <div className="mb-6 p-4 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50">
+            <div className="text-center space-y-3">
+              <div className="mx-auto w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                <Upload className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-slate-900">Bulk Upload Products</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Upload CSV or Excel file with product details
+                </p>
+                <a 
+                  href="data:text/csv;charset=utf-8,name,category,customid,price,quantity%0ASample%20Product,Electronics,PROD001,99.99,5%0AAnother%20Product,Clothing,PROD002,49.99,10" 
+                  download="product-template.csv"
+                  className="text-xs text-blue-600 hover:text-blue-700 underline"
+                >
+                  Download CSV template
+                </a>
+              </div>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="gap-2"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4" />
+                    Choose File
+                  </>
+                )}
+              </Button>
+              
+              {uploadMessage && (
+                <Alert className={`mt-3 ${showUploadSuccess ? 'border-green-200 bg-green-50' : 'border-blue-200 bg-blue-50'}`}>
+                  <div className="flex items-center gap-2">
+                    {showUploadSuccess && <CheckCircle className="h-4 w-4 text-green-600" />}
+                    <AlertDescription className={showUploadSuccess ? 'text-green-700' : 'text-blue-700'}>
+                      <pre className="whitespace-pre-wrap text-xs">{uploadMessage}</pre>
+                    </AlertDescription>
+                  </div>
+                </Alert>
+              )}
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-slate-500">Or sign in manually</span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6 mt-6">
             <div className="space-y-2">
               <Label htmlFor="storeId" className="text-slate-700 font-medium">
                 Store ID
