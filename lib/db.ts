@@ -125,19 +125,25 @@ export async function getPurchasesByStoreId(storeId: string): Promise<Purchase[]
 
 export async function verifyAdminCredentials(email: string, password: string): Promise<boolean> {
   const sql = getSql()
+  
   try {
-    // Ensure pgcrypto exists for crypt() password verification
-    await sql`create extension if not exists pgcrypto`
-  } catch {
-    // ignore if not permitted or already exists
+    // Get the admin user's password hash
+    const result = await sql`
+      select password_hash from admin_users where email = ${email} limit 1
+    `
+    
+    if (!result || result.length === 0) {
+      return false
+    }
+    
+    const user = result[0] as { password_hash: string }
+    
+    // Use bcrypt to verify the password
+    const bcrypt = await import('bcrypt')
+    return await bcrypt.compare(password, user.password_hash)
+    
+  } catch (error) {
+    console.error('Error verifying admin credentials:', error)
+    return false
   }
-
-  const result = await sql`
-    select exists (
-      select 1 from admin_users
-      where email = ${email}
-        and password_hash = crypt(${password}, password_hash)
-    ) as exists
-  `
-  return !!(result as any[])[0]?.exists
 }
