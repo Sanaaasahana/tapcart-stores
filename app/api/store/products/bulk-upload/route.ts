@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getStoreSession } from "@/lib/auth"
 import { neon } from "@neondatabase/serverless"
-import * as XLSX from 'xlsx'
 
 function getSql() {
   const url = process.env.DATABASE_URL
@@ -53,6 +52,7 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Excel file
+      const XLSX = await import('xlsx')
       const workbook = XLSX.read(arrayBuffer)
       const sheetName = workbook.SheetNames[0]
       const worksheet = workbook.Sheets[sheetName]
