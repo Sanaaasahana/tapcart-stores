@@ -234,7 +234,7 @@ export default function StoreProductsPage() {
           </div>
 
           {/* Enhanced Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-cyan-50">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-slate-600">Total Products</CardTitle>
@@ -254,17 +254,6 @@ export default function StoreProductsPage() {
               <CardContent>
                 <div className="text-2xl font-bold text-slate-900">{categoryCounts.length}</div>
                 <p className="text-xs text-slate-500 mt-1">Product categories</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-sm bg-gradient-to-br from-orange-50 to-red-50">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Low Stock Alert</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-orange-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-slate-900">{lowStockItems.length}</div>
-                <p className="text-xs text-slate-500 mt-1">Items below 10 units</p>
               </CardContent>
             </Card>
 
@@ -351,7 +340,7 @@ export default function StoreProductsPage() {
                         variant="outline"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
-                        className="gap-2 mb-3 text-slate-700 border-slate-300 hover:bg-slate-50"
+                        className="gap-2 mb-3 bg-slate-900 text-white border-slate-900 hover:bg-slate-800"
                       >
                         {isUploading ? (
                           <>
@@ -429,11 +418,6 @@ export default function StoreProductsPage() {
                   <Badge variant="outline" className="text-xs">
                     Showing {filteredItems.length} of {items.length} items
                   </Badge>
-                  {lowStockItems.length > 0 && (
-                    <Badge variant="destructive" className="text-xs">
-                      {lowStockItems.length} low stock
-                    </Badge>
-                  )}
                 </div>
               </div>
             </CardContent>
@@ -442,17 +426,7 @@ export default function StoreProductsPage() {
           {/* Items List */}
           <Card className="border-0 shadow-sm">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl font-bold text-slate-900">Product Inventory</CardTitle>
-                <div className="flex gap-2">
-                  {lowStockItems.length > 0 && (
-                    <Badge variant="destructive" className="gap-1">
-                      <AlertTriangle className="w-3 h-3" />
-                      Low Stock Alert
-                    </Badge>
-                  )}
-                </div>
-              </div>
+              <CardTitle className="text-xl font-bold text-slate-900">Product Inventory</CardTitle>
             </CardHeader>
             <CardContent>
               {viewMode === "table" ? (
@@ -471,52 +445,60 @@ export default function StoreProductsPage() {
                     <tbody>
                       {filteredItems.map((p) => (
                         <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="py-4 px-4">
-                            <div className="font-medium text-slate-900">{p.name}</div>
-                            <div className="text-sm text-slate-500">#{p.customId || p.id}</div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <Badge variant="secondary" className="text-xs">
-                              {p.category}
-                            </Badge>
-                          </td>
-                          <td className="py-4 px-4">
-                            <span className="font-medium text-slate-900">₹{p.price.toFixed(2)}</span>
-                          </td>
-                          <td className="py-4 px-4">
-                            <span className={`font-medium ${p.stock < 10 ? 'text-red-600' : 'text-slate-900'}`}>
-                              {p.stock} units
-                            </span>
-                          </td>
-                          <td className="py-4 px-4">
-                            <Badge
-                              variant={p.stock === 0 ? "destructive" : p.stock < 10 ? "secondary" : "default"}
-                              className={
-                                p.stock === 0
-                                  ? "bg-red-100 text-red-700 hover:bg-red-100"
-                                  : p.stock < 10
-                                    ? "bg-orange-100 text-orange-700 hover:bg-orange-100"
-                                    : "bg-green-100 text-green-700 hover:bg-green-100"
-                              }
-                            >
-                              {p.stock === 0 ? "Out of Stock" : p.stock < 10 ? "Low Stock" : "In Stock"}
-                            </Badge>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="flex gap-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => startEdit(p)}
-                                className="text-slate-700 border-slate-300 hover:bg-slate-50"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button variant="destructive" size="sm" onClick={() => remove(p.id)}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </td>
+                          {editId === p.id ? (
+                            <td colSpan={6} className="py-4 px-4">
+                              <form onSubmit={submitEdit} className="flex flex-col md:flex-row gap-3 w-full">
+                                <Input value={editCustomId} onChange={(e) => setEditCustomId(e.target.value)} className="md:w-1/5" placeholder="Custom ID" />
+                                <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="md:w-1/5" placeholder="Name" />
+                                <Input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="md:w-1/5" placeholder="Category" />
+                                <Input type="number" step="0.01" value={editPrice} onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))} className="md:w-1/6" placeholder="Price" />
+                                <div className="flex gap-2">
+                                  <Button type="submit" size="sm" className="bg-slate-900 text-white hover:bg-slate-800">Save</Button>
+                                  <Button type="button" variant="outline" size="sm" onClick={() => setEditId(null)} className="text-slate-700 border-slate-300">Cancel</Button>
+                                </div>
+                              </form>
+                            </td>
+                          ) : (
+                            <>
+                              <td className="py-4 px-4">
+                                <div className="font-medium text-slate-900">{p.name}</div>
+                                <div className="text-sm text-slate-500">#{p.customId || p.id}</div>
+                              </td>
+                              <td className="py-4 px-4">
+                                <Badge variant="secondary" className="text-xs">
+                                  {p.category}
+                                </Badge>
+                              </td>
+                              <td className="py-4 px-4">
+                                <span className="font-medium text-slate-900">₹{p.price.toFixed(2)}</span>
+                              </td>
+                              <td className="py-4 px-4">
+                                <span className="font-medium text-slate-900">
+                                  {p.stock} units
+                                </span>
+                              </td>
+                              <td className="py-4 px-4">
+                                <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100">
+                                  In Stock
+                                </Badge>
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="flex gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => startEdit(p)}
+                                    className="bg-slate-900 text-white border-slate-900 hover:bg-slate-800"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="destructive" size="sm" onClick={() => remove(p.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </>
+                          )}
                         </tr>
                       ))}
                     </tbody>
@@ -526,56 +508,62 @@ export default function StoreProductsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredItems.map((p) => (
                     <div key={p.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-slate-900 mb-1">{p.name}</h3>
-                          <p className="text-sm text-slate-500">#{p.customId || p.id}</p>
-                        </div>
-                        <Badge
-                          variant={p.stock === 0 ? "destructive" : p.stock < 10 ? "secondary" : "default"}
-                          className={
-                            p.stock === 0
-                              ? "bg-red-100 text-red-700 hover:bg-red-100"
-                              : p.stock < 10
-                                ? "bg-orange-100 text-orange-700 hover:bg-orange-100"
-                                : "bg-green-100 text-green-700 hover:bg-green-100"
-                          }
-                        >
-                          {p.stock === 0 ? "Out" : p.stock < 10 ? "Low" : "In Stock"}
-                        </Badge>
-                      </div>
-                      
-                      <div className="space-y-2 mb-4">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-600">Category:</span>
-                          <Badge variant="outline" className="text-xs">{p.category}</Badge>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-600">Price:</span>
-                          <span className="font-medium">₹{p.price.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-slate-600">Stock:</span>
-                          <span className={`font-medium ${p.stock < 10 ? 'text-red-600' : 'text-slate-900'}`}>
-                            {p.stock} units
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => startEdit(p)} 
-                          className="flex-1 text-slate-700 border-slate-300 hover:bg-slate-50"
-                        >
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => remove(p.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      {editId === p.id ? (
+                        <form onSubmit={submitEdit} className="space-y-3">
+                          <Input value={editCustomId} onChange={(e) => setEditCustomId(e.target.value)} placeholder="Custom ID" />
+                          <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Name" />
+                          <Input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} placeholder="Category" />
+                          <Input type="number" step="0.01" value={editPrice} onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))} placeholder="Price" />
+                          <div className="flex gap-2">
+                            <Button type="submit" size="sm" className="flex-1 bg-slate-900 text-white hover:bg-slate-800">Save</Button>
+                            <Button type="button" variant="outline" size="sm" onClick={() => setEditId(null)} className="text-slate-700 border-slate-300">Cancel</Button>
+                          </div>
+                        </form>
+                      ) : (
+                        <>
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <h3 className="font-medium text-slate-900 mb-1">{p.name}</h3>
+                              <p className="text-sm text-slate-500">#{p.customId || p.id}</p>
+                            </div>
+                            <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100">
+                              In Stock
+                            </Badge>
+                          </div>
+                          
+                          <div className="space-y-2 mb-4">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-slate-600">Category:</span>
+                              <Badge variant="outline" className="text-xs">{p.category}</Badge>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-slate-600">Price:</span>
+                              <span className="font-medium">₹{p.price.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-slate-600">Stock:</span>
+                              <span className="font-medium text-slate-900">
+                                {p.stock} units
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => startEdit(p)} 
+                              className="flex-1 bg-slate-900 text-white border-slate-900 hover:bg-slate-800"
+                            >
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Edit
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => remove(p.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
