@@ -351,7 +351,7 @@ export default function StoreProductsPage() {
                         variant="outline"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
-                        className="gap-2 mb-3"
+                        className="gap-2 mb-3 text-slate-700 border-slate-300 hover:bg-slate-50"
                       >
                         {isUploading ? (
                           <>
@@ -368,7 +368,7 @@ export default function StoreProductsPage() {
                       
                       <div className="text-xs">
                         <a 
-                          href="data:text/csv;charset=utf-8,name,category,customid,price,quantity%0ASample%20Product,Electronics,PROD001,99.99,5%0AAnother%20Product,Clothing,PROD002,49.99,10" 
+                          href="data:text/csv;charset=utf-8,name,category,customid,price,quantity" 
                           download="product-template.csv"
                           className="text-blue-600 hover:text-blue-700 underline"
                         >
@@ -504,7 +504,12 @@ export default function StoreProductsPage() {
                           </td>
                           <td className="py-4 px-4">
                             <div className="flex gap-2">
-                              <Button variant="outline" size="sm" onClick={() => startEdit(p)}>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => startEdit(p)}
+                                className="text-slate-700 border-slate-300 hover:bg-slate-50"
+                              >
                                 <Pencil className="h-4 w-4" />
                               </Button>
                               <Button variant="destructive" size="sm" onClick={() => remove(p.id)}>
@@ -558,7 +563,12 @@ export default function StoreProductsPage() {
                       </div>
                       
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => startEdit(p)} className="flex-1">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => startEdit(p)} 
+                          className="flex-1 text-slate-700 border-slate-300 hover:bg-slate-50"
+                        >
                           <Pencil className="h-4 w-4 mr-2" />
                           Edit
                         </Button>
