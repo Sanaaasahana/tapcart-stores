@@ -16,7 +16,6 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("Sm2226#")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [setupMessage, setSetupMessage] = useState("")
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,29 +45,6 @@ export default function AdminLoginPage() {
     }
   }
 
-  const handleSetup = async () => {
-    setIsLoading(true)
-    setError("")
-    setSetupMessage("")
-
-    try {
-      const response = await fetch("/api/admin/setup", {
-        method: "POST",
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setSetupMessage(data.message)
-      } else {
-        setError(data.error || "Setup failed")
-      }
-    } catch (error) {
-      setError("Network error during setup. Please try again.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-orange-900 flex items-center justify-center p-4">
@@ -129,12 +105,6 @@ export default function AdminLoginPage() {
               </Alert>
             )}
 
-            {setupMessage && (
-              <Alert className="border-green-200 bg-green-50">
-                <AlertDescription className="text-green-700">{setupMessage}</AlertDescription>
-              </Alert>
-            )}
-
             <Button
               type="submit"
               disabled={isLoading}
@@ -148,16 +118,6 @@ export default function AdminLoginPage() {
               ) : (
                 "Access Admin Panel"
               )}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleSetup}
-              disabled={isLoading}
-              className="w-full h-10"
-            >
-              Setup Admin User
             </Button>
           </form>
 
