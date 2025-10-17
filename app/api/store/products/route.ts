@@ -51,10 +51,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Custom ID already exists" }, { status: 400 })
     }
 
-    // Insert N rows (each item unique id), stock=1 per spec
+    // Insert N rows with sequential IDs
     for (let i = 0; i < quantity; i++) {
-      // default stock=1 to keep compatibility with dashboard
-      await sql`insert into products (store_id, name, category, custom_id, price, stock) values (${session.storeId}, ${name}, ${category}, ${customId}, ${price}, 1)`
+      let sequentialId = customId
+      
+      // Generate sequential ID if quantity > 1
+      if (quantity > 1) {
+        // Extract base ID and number
+        const baseMatch = customId.match(/^(.+?)(\d+)$/)
+        if (baseMatch) {
+          const base = baseMatch[1]
+          const startNum = parseInt(baseMatch[2])
+          sequentialId = `${base}${String(startNum + i).padStart(baseMatch[2].length, '0')}`
+        } else {
+          // If no number at end, add sequential numbers
+          sequentialId = `${customId}${String(i + 1).padStart(2, '0')}`
+        }
+      }
+      
+      await sql`insert into products (store_id, name, category, custom_id, price, stock) values (${session.storeId}, ${name}, ${category}, ${sequentialId}, ${price}, 1)`
     }
 
     return NextResponse.json({ success: true })
