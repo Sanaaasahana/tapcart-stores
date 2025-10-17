@@ -54,7 +54,7 @@ export default function StoreExportPage() {
         const sessionRes = await fetch("/api/store/auth/session")
         if (sessionRes.ok) {
           const sessionData = await sessionRes.json()
-          setStoreName(sessionData.storeId || "mystore")
+          setStoreName(sessionData.storeId || "")
         }
       } catch (error) {
         console.error("Failed to load store session:", error)
@@ -118,10 +118,9 @@ export default function StoreExportPage() {
 
   // Export to CSV
   const exportToCSV = () => {
-    const selectedProducts = items.filter(item => selectedItems.has(item.id))
     const csvContent = [
       ['Product Name', 'Product ID', 'Category', 'Price', 'Stock', 'Link'],
-      ...selectedProducts.map(product => [
+      ...items.map(product => [
         product.name,
         product.customId || product.id.toString(),
         product.category,
@@ -178,13 +177,15 @@ export default function StoreExportPage() {
                   <Label htmlFor="storeName">Store Name</Label>
                   <Input
                     id="storeName"
-                    placeholder="Enter your store name"
+                    placeholder="Store name will be loaded automatically"
                     value={storeName}
-                    onChange={(e) => setStoreName(e.target.value)}
+                    readOnly
+                    className="bg-slate-50"
                   />
+                  <p className="text-xs text-slate-500 mt-1">Store name is automatically set from your login</p>
                 </div>
                 <div className="text-sm text-slate-500">
-                  Links will be formatted as: <code className="bg-slate-100 px-2 py-1 rounded">{storeName}/product-id/cart.com</code>
+                  Links will be formatted as: <code className="bg-slate-100 px-2 py-1 rounded">{storeName || 'yourstore'}/product-id/cart.com</code>
                 </div>
               </div>
             </CardContent>
@@ -240,17 +241,17 @@ export default function StoreExportPage() {
               <div className="flex flex-wrap gap-4">
                 <Button
                   onClick={exportToCSV}
-                  disabled={selectedItems.size === 0 || !storeName}
+                  disabled={!storeName}
                   className="gap-2"
                 >
                   <Download className="h-4 w-4" />
-                  Export CSV ({selectedItems.size} items)
+                  Download All Products CSV ({items.length} items)
                 </Button>
                 <Button
                   variant="outline"
                   onClick={copyLinks}
                   disabled={selectedItems.size === 0 || !storeName}
-                  className="gap-2"
+                  className="gap-2 bg-slate-900 text-white border-slate-900 hover:bg-slate-800"
                 >
                   <Link className="h-4 w-4" />
                   Copy Links ({selectedItems.size} items)
