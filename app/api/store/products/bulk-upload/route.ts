@@ -126,9 +126,25 @@ export async function POST(request: NextRequest) {
           continue
         }
 
-        // Insert items (one row per quantity)
+        // Insert items with sequential IDs (one row per quantity)
         for (let i = 0; i < quantity; i++) {
-          await sql`insert into products (store_id, name, category, custom_id, price, stock) values (${session.storeId}, ${name}, ${category}, ${customId}, ${price}, 1)`
+          let sequentialId = customId
+          
+          // Generate sequential ID if quantity > 1
+          if (quantity > 1) {
+            // Extract base ID and number
+            const baseMatch = customId.match(/^(.+?)(\d+)$/)
+            if (baseMatch) {
+              const base = baseMatch[1]
+              const startNum = parseInt(baseMatch[2])
+              sequentialId = `${base}${String(startNum + i).padStart(baseMatch[2].length, '0')}`
+            } else {
+              // If no number at end, add sequential numbers
+              sequentialId = `${customId}${String(i + 1).padStart(2, '0')}`
+            }
+          }
+          
+          await sql`insert into products (store_id, name, category, custom_id, price, stock) values (${session.storeId}, ${name}, ${category}, ${sequentialId}, ${price}, 1)`
         }
         
         successCount++
