@@ -14,7 +14,7 @@ import { getStoreSession } from "@/lib/auth"
 
 interface ProductItem {
   id: number
-  customId?: string
+  custom_id?: string
   name: string
   category: string
   price: number
@@ -73,7 +73,7 @@ export default function StoreExportPage() {
   // Filter and search logic
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.customId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.custom_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.category.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesCategory = selectedCategory === "all" || item.category === selectedCategory
@@ -109,7 +109,7 @@ export default function StoreExportPage() {
   const generateLinks = () => {
     const selectedProducts = items.filter(item => selectedItems.has(item.id))
     const links = selectedProducts.map(product => {
-      const productId = product.customId || product.id.toString()
+      const productId = product.custom_id || product.id.toString()
       return `${storeName}/${productId}/cart.com`
     })
     
@@ -117,16 +117,23 @@ export default function StoreExportPage() {
   }
 
   // Export to CSV
-  const exportToCSV = () => {
+  const exportToCSV = (exportAll = false) => {
+    const productsToExport = exportAll ? items : items.filter(item => selectedItems.has(item.id))
+    
+    if (productsToExport.length === 0) {
+      alert('No products selected for export')
+      return
+    }
+
     const csvContent = [
       ['Product Name', 'Product ID', 'Category', 'Price', 'Stock', 'Link'],
-      ...items.map(product => [
+      ...productsToExport.map(product => [
         product.name,
-        product.customId || product.id.toString(),
+        product.custom_id || product.id.toString(),
         product.category,
         product.price.toString(),
         product.stock.toString(),
-        `${storeName}/${product.customId || product.id}/cart.com`
+        `${storeName}/${product.custom_id || product.id}/cart.com`
       ])
     ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
 
@@ -134,7 +141,7 @@ export default function StoreExportPage() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `product-links-${new Date().toISOString().split('T')[0]}.csv`)
+    link.setAttribute('download', `product-links-${exportAll ? 'all' : 'selected'}-${new Date().toISOString().split('T')[0]}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -165,31 +172,6 @@ export default function StoreExportPage() {
             <p className="text-slate-600">Select products and export their purchase links</p>
           </div>
 
-          {/* Store Name Configuration */}
-          <Card className="border-0 shadow-sm mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg font-bold text-slate-900">Store Configuration</CardTitle>
-              <CardDescription>Configure your store name for link generation</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4 items-end">
-                <div className="flex-1">
-                  <Label htmlFor="storeName">Store Name</Label>
-                  <Input
-                    id="storeName"
-                    placeholder="Store name will be loaded automatically"
-                    value={storeName}
-                    readOnly
-                    className="bg-slate-50"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">Store name is automatically set from your login</p>
-                </div>
-                <div className="text-sm text-slate-500">
-                  Links will be formatted as: <code className="bg-slate-100 px-2 py-1 rounded">{storeName || 'yourstore'}/product-id/cart.com</code>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Search and Filter */}
           <Card className="border-0 shadow-sm mb-6">
@@ -236,36 +218,53 @@ export default function StoreExportPage() {
           <Card className="border-0 shadow-sm mb-6">
             <CardHeader>
               <CardTitle className="text-lg font-bold text-slate-900">Export Actions</CardTitle>
+              <CardDescription>Export product links and data</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-4">
-                <Button
-                  onClick={exportToCSV}
-                  disabled={!storeName}
-                  className="gap-2"
-                >
-                  <Download className="h-4 w-4" />
-                  Download All Products CSV ({items.length} items)
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={copyLinks}
-                  disabled={selectedItems.size === 0 || !storeName}
-                  className="gap-2 bg-slate-900 text-white border-slate-900 hover:bg-slate-800"
-                >
-                  <Link className="h-4 w-4" />
-                  Copy Links ({selectedItems.size} items)
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setSelectedItems(new Set())
-                    setSelectAll(false)
-                  }}
-                  disabled={selectedItems.size === 0}
-                >
-                  Clear Selection
-                </Button>
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-4">
+                  <Button
+                    onClick={() => exportToCSV(true)}
+                    disabled={!storeName || items.length === 0}
+                    className="gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download All Products CSV ({items.length} items)
+                  </Button>
+                  <Button
+                    onClick={() => exportToCSV(false)}
+                    disabled={selectedItems.size === 0 || !storeName}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Selected CSV ({selectedItems.size} items)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={copyLinks}
+                    disabled={selectedItems.size === 0 || !storeName}
+                    className="gap-2 bg-slate-900 text-white border-slate-900 hover:bg-slate-800"
+                  >
+                    <Link className="h-4 w-4" />
+                    Copy Links ({selectedItems.size} items)
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setSelectedItems(new Set())
+                      setSelectAll(false)
+                    }}
+                    disabled={selectedItems.size === 0}
+                  >
+                    Clear Selection
+                  </Button>
+                </div>
+                {storeName && (
+                  <div className="text-sm text-slate-500">
+                    Links will be formatted as: <code className="bg-slate-100 px-2 py-1 rounded">{storeName}/product-id/cart.com</code>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -300,7 +299,7 @@ export default function StoreExportPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <h3 className="font-medium text-slate-900">{item.name}</h3>
-                          <p className="text-sm text-slate-500">#{item.customId || item.id}</p>
+                          <p className="text-sm text-slate-500">#{item.custom_id || 'No ID'}</p>
                         </div>
                         <div className="text-right">
                           <div className="font-medium text-slate-900">₹{item.price.toFixed(2)}</div>
@@ -311,7 +310,7 @@ export default function StoreExportPage() {
                       </div>
                       <div className="mt-2">
                         <code className="text-xs bg-slate-100 px-2 py-1 rounded">
-                          {storeName}/{item.customId || item.id}/cart.com
+                          {storeName}/{item.custom_id || item.id}/cart.com
                         </code>
                       </div>
                     </div>
