@@ -159,13 +159,16 @@ export default function StoreExportPage() {
 
     const links = productsToExport.map(product => 
       `${storeName}/${product.custom_id || product.id}/cart.com`
-    ).join('\n')
+    )
 
-    const blob = new Blob([links], { type: 'text/plain;charset=utf-8;' })
+    // Create CSV content with proper CSV formatting
+    const csvContent = links.map(link => `"${link}"`).join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `product-links-only-${exportAll ? 'all' : 'selected'}-${new Date().toISOString().split('T')[0]}.txt`)
+    link.setAttribute('download', `product-links-only-${exportAll ? 'all' : 'selected'}-${new Date().toISOString().split('T')[0]}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -259,7 +262,7 @@ export default function StoreExportPage() {
                     onClick={() => exportToCSV(false)}
                     disabled={selectedItems.size === 0 || !storeName}
                     variant="outline"
-                    className="gap-2"
+                    className="gap-2 bg-white text-black border-gray-300 hover:bg-gray-50"
                   >
                     <Download className="h-4 w-4" />
                     Download Selected CSV ({selectedItems.size} items)
