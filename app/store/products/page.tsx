@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { toast } from "@/hooks/use-toast"
+import { Toaster } from "@/components/ui/toaster"
 import { Package2, Layers, IndianRupee, Plus, Trash2, Pencil, Search, Filter, Eye, AlertTriangle, TrendingUp, BarChart3, Upload, FileText, CheckCircle, Loader2 } from "lucide-react"
 
 interface ProductItem {
@@ -48,8 +50,6 @@ export default function StoreProductsPage() {
 
   // File upload states
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadMessage, setUploadMessage] = useState("")
-  const [showUploadSuccess, setShowUploadSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const load = async () => {
@@ -165,8 +165,6 @@ export default function StoreProductsPage() {
     if (!file) return
 
     setIsUploading(true)
-    setUploadMessage("")
-    setShowUploadSuccess(false)
 
     try {
       const formData = new FormData()
@@ -180,20 +178,32 @@ export default function StoreProductsPage() {
       const data = await response.json()
 
       if (response.ok && data.success) {
-        setUploadMessage(data.message)
-        setShowUploadSuccess(true)
-        if (data.errors && data.errors.length > 0) {
-          setUploadMessage(data.message + "\nErrors: " + data.errors.join(", "))
-        }
+        // Show success toast
+        toast({
+          title: "Upload Successful! 🎉",
+          description: data.message,
+          duration: 5000,
+        })
+        
         // Reload products after successful upload
         await load()
       } else {
-        setUploadMessage(data.error || data.message || "Upload failed")
-        setShowUploadSuccess(false)
+        // Show error toast
+        toast({
+          title: "Upload Failed",
+          description: data.error || data.message || "Upload failed. Please try again.",
+          variant: "destructive",
+          duration: 7000,
+        })
       }
     } catch (error) {
-      setUploadMessage("Network error during upload. Please try again.")
-      setShowUploadSuccess(false)
+      // Show network error toast
+      toast({
+        title: "Network Error",
+        description: "Network error during upload. Please try again.",
+        variant: "destructive",
+        duration: 7000,
+      })
     } finally {
       setIsUploading(false)
     }
@@ -367,17 +377,6 @@ export default function StoreProductsPage() {
                     </div>
                   </div>
                 </div>
-                
-                {uploadMessage && (
-                  <Alert className={`${showUploadSuccess ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-                    <div className="flex items-center gap-2">
-                      {showUploadSuccess && <CheckCircle className="h-4 w-4 text-green-600" />}
-                      <AlertDescription className={showUploadSuccess ? 'text-green-700' : 'text-red-700'}>
-                        <pre className="whitespace-pre-wrap text-sm">{uploadMessage}</pre>
-                      </AlertDescription>
-                    </div>
-                  </Alert>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -585,6 +584,7 @@ export default function StoreProductsPage() {
           </Card>
         </div>
       </div>
+      <Toaster />
     </div>
   )
 } 
