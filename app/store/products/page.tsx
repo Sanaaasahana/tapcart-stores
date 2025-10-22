@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Package2, Layers, IndianRupee, Plus, Trash2, Pencil, Search, Filter, Eye, AlertTriangle, TrendingUp, BarChart3, Upload, FileText, CheckCircle } from "lucide-react"
+import { Package2, Layers, IndianRupee, Plus, Trash2, Pencil, Search, Filter, Eye, AlertTriangle, TrendingUp, BarChart3, Upload, FileText, CheckCircle, Loader2 } from "lucide-react"
 
 interface ProductItem {
   id: number
-  customId?: string
+  custom_id?: string
   name: string
   category: string
   price: number
@@ -30,14 +30,14 @@ export default function StoreProductsPage() {
   const [loading, setLoading] = useState(false)
 
   const [name, setName] = useState("")
-  const [customId, setCustomId] = useState("")
+  const [custom_id, setCustom_id] = useState("")
   const [category, setCategory] = useState("")
   const [price, setPrice] = useState<number | "">("")
   const [quantity, setQuantity] = useState<number | "">(1)
 
   const [editId, setEditId] = useState<number | null>(null)
   const [editName, setEditName] = useState("")
-  const [editCustomId, setEditCustomId] = useState("")
+  const [editCustom_id, setEditCustom_id] = useState("")
   const [editCategory, setEditCategory] = useState("")
   const [editPrice, setEditPrice] = useState<number | "">("")
 
@@ -76,13 +76,13 @@ export default function StoreProductsPage() {
 
   const submitNew = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name || !category || !customId || price === "" || quantity === "") return
+    if (!name || !category || !custom_id || price === "" || quantity === "") return
     setLoading(true)
     try {
       const response = await fetch("/api/store/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, category, customId, price: Number(price), quantity: Number(quantity) }),
+        body: JSON.stringify({ name, category, customId: custom_id, price: Number(price), quantity: Number(quantity) }),
       })
       
       if (!response.ok) {
@@ -92,7 +92,7 @@ export default function StoreProductsPage() {
       }
       
       setName("")
-      setCustomId("")
+      setCustom_id("")
       setCategory("")
       setPrice("")
       setQuantity(1)
@@ -107,7 +107,7 @@ export default function StoreProductsPage() {
   const startEdit = (p: ProductItem) => {
     setEditId(p.id)
     setEditName(p.name)
-    setEditCustomId(p.customId || "")
+    setEditCustom_id(p.custom_id || "")
     setEditCategory(p.category)
     setEditPrice(p.price)
   }
@@ -120,7 +120,7 @@ export default function StoreProductsPage() {
       await fetch("/api/store/products", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editId, name: editName, customId: editCustomId, category: editCategory, price: Number(editPrice) }),
+        body: JSON.stringify({ id: editId, name: editName, customId: editCustom_id, category: editCategory, price: Number(editPrice) }),
       })
       setEditId(null)
       await load()
@@ -146,7 +146,7 @@ export default function StoreProductsPage() {
   // Filter and search logic
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.customId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.custom_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.category.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesCategory = selectedCategory === "all" || item.category === selectedCategory
@@ -179,7 +179,7 @@ export default function StoreProductsPage() {
 
       const data = await response.json()
 
-      if (response.ok) {
+      if (response.ok && data.success) {
         setUploadMessage(data.message)
         setShowUploadSuccess(true)
         if (data.errors && data.errors.length > 0) {
@@ -188,7 +188,7 @@ export default function StoreProductsPage() {
         // Reload products after successful upload
         await load()
       } else {
-        setUploadMessage(data.error || "Upload failed")
+        setUploadMessage(data.error || data.message || "Upload failed")
         setShowUploadSuccess(false)
       }
     } catch (error) {
@@ -280,8 +280,8 @@ export default function StoreProductsPage() {
             <CardContent>
               <form className="grid grid-cols-1 md:grid-cols-5 gap-4" onSubmit={submitNew}>
                 <div>
-                  <Label htmlFor="customId">Custom ID</Label>
-                  <Input id="customId" value={customId} onChange={(e) => setCustomId(e.target.value)} required />
+                  <Label htmlFor="custom_id">Custom ID</Label>
+                  <Input id="custom_id" value={custom_id} onChange={(e) => setCustom_id(e.target.value)} required />
                 </div>
                 <div>
                   <Label htmlFor="name">Item Name</Label>
@@ -448,7 +448,7 @@ export default function StoreProductsPage() {
                           {editId === p.id ? (
                             <td colSpan={6} className="py-4 px-4">
                               <form onSubmit={submitEdit} className="flex flex-col md:flex-row gap-3 w-full">
-                                <Input value={editCustomId} onChange={(e) => setEditCustomId(e.target.value)} className="md:w-1/5" placeholder="Custom ID" />
+                                <Input value={editCustom_id} onChange={(e) => setEditCustom_id(e.target.value)} className="md:w-1/5" placeholder="Custom ID" />
                                 <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="md:w-1/5" placeholder="Name" />
                                 <Input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="md:w-1/5" placeholder="Category" />
                                 <Input type="number" step="0.01" value={editPrice} onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))} className="md:w-1/6" placeholder="Price" />
@@ -462,7 +462,7 @@ export default function StoreProductsPage() {
                             <>
                               <td className="py-4 px-4">
                                 <div className="font-medium text-slate-900">{p.name}</div>
-                                <div className="text-sm text-slate-500">#{p.customId || p.id}</div>
+                                <div className="text-sm text-slate-500">#{p.custom_id || 'No ID'}</div>
                               </td>
                               <td className="py-4 px-4">
                                 <Badge variant="secondary" className="text-xs">
@@ -510,7 +510,7 @@ export default function StoreProductsPage() {
                     <div key={p.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                       {editId === p.id ? (
                         <form onSubmit={submitEdit} className="space-y-3">
-                          <Input value={editCustomId} onChange={(e) => setEditCustomId(e.target.value)} placeholder="Custom ID" />
+                          <Input value={editCustom_id} onChange={(e) => setEditCustom_id(e.target.value)} placeholder="Custom ID" />
                           <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Name" />
                           <Input value={editCategory} onChange={(e) => setEditCategory(e.target.value)} placeholder="Category" />
                           <Input type="number" step="0.01" value={editPrice} onChange={(e) => setEditPrice(e.target.value === "" ? "" : Number(e.target.value))} placeholder="Price" />
@@ -524,7 +524,7 @@ export default function StoreProductsPage() {
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex-1">
                               <h3 className="font-medium text-slate-900 mb-1">{p.name}</h3>
-                              <p className="text-sm text-slate-500">#{p.customId || p.id}</p>
+                              <p className="text-sm text-slate-500">#{p.custom_id || 'No ID'}</p>
                             </div>
                             <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100">
                               In Stock
