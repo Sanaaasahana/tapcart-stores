@@ -88,6 +88,16 @@ export default function StoreProductsPage() {
       if (!response.ok) {
         const errorData = await response.json()
         console.error("Failed to add product:", errorData)
+        
+        // Show specific error message
+        toast({
+          title: "Error Adding Product",
+          description: errorData.error === "Custom ID already exists" 
+            ? "Duplicate ID Error: This custom ID already exists. Please use a different ID."
+            : errorData.error || "Failed to add product. Please try again.",
+          variant: "destructive",
+          duration: 7000,
+        })
         return
       }
       
@@ -96,6 +106,14 @@ export default function StoreProductsPage() {
       setCategory("")
       setPrice("")
       setQuantity(1)
+      
+      // Show success message
+      toast({
+        title: "Product Added Successfully! 🎉",
+        description: `Product "${name}" has been added to your inventory.`,
+        duration: 5000,
+      })
+      
       await load()
     } catch (error) {
       console.error("Error adding product:", error)
@@ -185,24 +203,36 @@ export default function StoreProductsPage() {
           duration: 5000,
         })
         
+        // Show errors if any
+        if (data.errors && data.errors.length > 0) {
+          setTimeout(() => {
+            toast({
+              title: "Some Issues Found",
+              description: `Some rows had errors: ${data.errors.slice(0, 3).join('; ')}${data.errors.length > 3 ? '...' : ''}`,
+              variant: "destructive",
+              duration: 8000,
+            })
+          }, 1000)
+        }
+        
         // Reload products after successful upload
         await load()
       } else {
-        // Show error toast
+        // Show error toast with better visibility
         toast({
-          title: "Upload Failed",
-          description: data.error || data.message || "Upload failed. Please try again.",
+          title: "Upload Failed ❌",
+          description: data.error || data.message || "Upload failed. Please check your CSV file and try again.",
           variant: "destructive",
-          duration: 7000,
+          duration: 10000,
         })
       }
     } catch (error) {
       // Show network error toast
       toast({
-        title: "Network Error",
-        description: "Network error during upload. Please try again.",
+        title: "Network Error ❌",
+        description: "Network error during upload. Please check your connection and try again.",
         variant: "destructive",
-        duration: 7000,
+        duration: 10000,
       })
     } finally {
       setIsUploading(false)
@@ -367,7 +397,7 @@ export default function StoreProductsPage() {
                       
                       <div className="text-xs">
                         <a 
-                          href="data:text/csv;charset=utf-8,name,category,customid,price,quantity" 
+                          href="data:text/csv;charset=utf-8,name,category,customid,price,quantity%0ATest Product,Electronics,TEST001,99.99,5%0AAnother Product,Clothing,CLOTH001,49.99,10" 
                           download="product-template.csv"
                           className="text-blue-600 hover:text-blue-700 underline"
                         >
