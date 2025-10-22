@@ -113,7 +113,13 @@ export async function POST(request: NextRequest) {
         const quantity = parseInt(row.quantity || row.Quantity || row.QUANTITY || '1')
 
         if (!name || !customId || isNaN(price) || isNaN(quantity) || quantity < 1) {
-          errors.push(`Row ${successCount + errorCount + 1}: Invalid data`)
+          const missingFields = []
+          if (!name) missingFields.push('name')
+          if (!customId) missingFields.push('customid')
+          if (isNaN(price)) missingFields.push('price')
+          if (isNaN(quantity) || quantity < 1) missingFields.push('quantity')
+          
+          errors.push(`Row ${successCount + errorCount + 1}: Missing or invalid data for fields: ${missingFields.join(', ')}`)
           errorCount++
           continue
         }
@@ -166,7 +172,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Upload completed. ${successCount} products added successfully${errorCount > 0 ? `, ${errorCount} errors` : ''}.`,
+      message: `Upload completed successfully! ${successCount} products added${errorCount > 0 ? `, ${errorCount} rows had errors` : ''}.`,
       successCount,
       errorCount,
       errors: errors.slice(0, 10) // Limit error messages
