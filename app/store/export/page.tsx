@@ -148,6 +148,30 @@ export default function StoreExportPage() {
     document.body.removeChild(link)
   }
 
+  // Export only links to CSV
+  const exportLinksOnlyCSV = (exportAll = false) => {
+    const productsToExport = exportAll ? items : items.filter(item => selectedItems.has(item.id))
+    
+    if (productsToExport.length === 0) {
+      alert('No products selected for export')
+      return
+    }
+
+    const links = productsToExport.map(product => 
+      `${storeName}/${product.custom_id || product.id}/cart.com`
+    ).join('\n')
+
+    const blob = new Blob([links], { type: 'text/plain;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `product-links-only-${exportAll ? 'all' : 'selected'}-${new Date().toISOString().split('T')[0]}.txt`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   // Copy links to clipboard
   const copyLinks = async () => {
     const links = generateLinks()
@@ -239,6 +263,15 @@ export default function StoreExportPage() {
                   >
                     <Download className="h-4 w-4" />
                     Download Selected CSV ({selectedItems.size} items)
+                  </Button>
+                  <Button
+                    onClick={() => exportLinksOnlyCSV(false)}
+                    disabled={selectedItems.size === 0 || !storeName}
+                    variant="outline"
+                    className="gap-2 bg-slate-900 text-white border-slate-900 hover:bg-slate-800"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Selected Links Only ({selectedItems.size} items)
                   </Button>
                   <Button
                     variant="outline"
