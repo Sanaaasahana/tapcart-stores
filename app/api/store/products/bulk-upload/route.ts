@@ -154,9 +154,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (successCount === 0) {
+      return NextResponse.json({
+        success: false,
+        message: `No products were uploaded successfully. ${errorCount} errors occurred.`,
+        successCount,
+        errorCount,
+        errors: errors.slice(0, 10)
+      }, { status: 400 })
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Upload completed. ${successCount} products added successfully, ${errorCount} errors.`,
+      message: `Upload completed. ${successCount} products added successfully${errorCount > 0 ? `, ${errorCount} errors` : ''}.`,
       successCount,
       errorCount,
       errors: errors.slice(0, 10) // Limit error messages
