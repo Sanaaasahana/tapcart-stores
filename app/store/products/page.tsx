@@ -97,6 +97,7 @@ export default function StoreProductsPage() {
             : errorData.error || "Failed to add product. Please try again.",
           variant: "destructive",
           duration: 7000,
+          className: "bg-red-600 text-white border-red-700",
         })
         return
       }
@@ -211,6 +212,7 @@ export default function StoreProductsPage() {
               description: `Some rows had errors: ${data.errors.slice(0, 3).join('; ')}${data.errors.length > 3 ? '...' : ''}`,
               variant: "destructive",
               duration: 8000,
+              className: "bg-red-600 text-white border-red-700",
             })
           }, 1000)
         }
@@ -224,6 +226,7 @@ export default function StoreProductsPage() {
           description: data.error || data.message || "Upload failed. Please check your CSV file and try again.",
           variant: "destructive",
           duration: 10000,
+          className: "bg-red-600 text-white border-red-700",
         })
       }
     } catch (error) {
@@ -233,6 +236,7 @@ export default function StoreProductsPage() {
         description: "Network error during upload. Please check your connection and try again.",
         variant: "destructive",
         duration: 10000,
+        className: "bg-red-600 text-white border-red-700",
       })
     } finally {
       setIsUploading(false)
