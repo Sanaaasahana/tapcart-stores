@@ -80,16 +80,23 @@ export default function StoreSettingsPage() {
       })
 
       if (response.ok) {
-        setMessage({ type: "success", text: "Payment settings saved successfully!" })
+        const data = await response.json()
+        setMessage({ type: "success", text: data.message || "Payment settings saved successfully!" })
         setHasExistingKeys(true)
         // Clear the secret field for security (don't want it visible after saving)
         setRazorpayKeySecret("")
       } else {
         const error = await response.json().catch(() => ({ error: "Failed to save settings" }))
-        setMessage({ type: "error", text: error.error || "Failed to save payment settings" })
+        const errorMessage = error.error || error.message || "Failed to save payment settings"
+        // Show detailed error in development
+        const details = error.details ? `\n\nDetails: ${error.details}` : ""
+        setMessage({ type: "error", text: errorMessage + details })
+        console.error("Payment settings save error:", error)
       }
-    } catch (error) {
-      setMessage({ type: "error", text: "An error occurred while saving settings" })
+    } catch (error: any) {
+      const errorMessage = error.message || "An error occurred while saving settings"
+      setMessage({ type: "error", text: errorMessage })
+      console.error("Payment settings save exception:", error)
     } finally {
       setIsSaving(false)
     }
