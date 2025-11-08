@@ -52,22 +52,32 @@ export async function PATCH(request: NextRequest) {
 
     const { razorpayKeyId, razorpayKeySecret } = await request.json()
 
-    if (!razorpayKeyId || !razorpayKeySecret) {
+    if (!razorpayKeyId) {
       return NextResponse.json(
-        { error: "Razorpay Key ID and Secret are required" },
+        { error: "Razorpay Key ID is required" },
         { status: 400 }
       )
     }
 
     const sql = getSql()
 
-    // Update store's Razorpay credentials
-    await sql`
-      UPDATE stores
-      SET razorpay_key_id = ${razorpayKeyId},
-          razorpay_key_secret = ${razorpayKeySecret}
-      WHERE store_id = ${session.storeId}
-    `
+    // If secret is provided, update both; otherwise only update key ID
+    if (razorpayKeySecret && razorpayKeySecret.trim() !== "") {
+      // Update both key ID and secret
+      await sql`
+        UPDATE stores
+        SET razorpay_key_id = ${razorpayKeyId},
+            razorpay_key_secret = ${razorpayKeySecret}
+        WHERE store_id = ${session.storeId}
+      `
+    } else {
+      // Only update key ID, keep existing secret
+      await sql`
+        UPDATE stores
+        SET razorpay_key_id = ${razorpayKeyId}
+        WHERE store_id = ${session.storeId}
+      `
+    }
 
     return NextResponse.json({ success: true, message: "Payment settings updated" })
   } catch (err) {
