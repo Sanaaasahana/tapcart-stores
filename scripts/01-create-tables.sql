@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS purchases (
     product_id INTEGER REFERENCES products(id),
     quantity INTEGER NOT NULL,
     total_amount DECIMAL(10,2) NOT NULL,
+    transaction_id VARCHAR(255),
+    payment_method VARCHAR(50),
     purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
