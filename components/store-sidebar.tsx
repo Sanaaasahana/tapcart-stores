@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Users, ShoppingCart, Menu, X, LogOut, Store, Package2, Download } from "lucide-react"
+import { Users, ShoppingCart, Menu, X, LogOut, Store, Package2, Download, Settings } from "lucide-react"
 
 const navigation = [
   { name: "Inventory", href: "/store/products", icon: Package2 },
@@ -13,6 +13,7 @@ const navigation = [
   { name: "Customers", href: "/store/customers", icon: Users },
   { name: "Purchases", href: "/store/purchases", icon: ShoppingCart },
   { name: "Export Links", href: "/store/export", icon: Download },
+  { name: "Settings", href: "/store/settings", icon: Settings },
 ]
 
 export function StoreSidebar() {
