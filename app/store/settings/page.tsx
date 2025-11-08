@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import { StoreSidebar } from "@/components/store-sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -118,16 +119,27 @@ export default function StoreSettingsPage() {
           <Alert className="mb-6 bg-blue-50 border-blue-200">
             <Info className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-blue-800">
-              <strong>How to get your Razorpay keys:</strong>
-              <ol className="list-decimal list-inside mt-2 space-y-1 text-sm">
-                <li>Sign up or log in to your Razorpay account at <a href="https://razorpay.com" target="_blank" rel="noopener noreferrer" className="underline">razorpay.com</a></li>
-                <li>Go to Settings → API Keys</li>
-                <li>Copy your Key ID and Key Secret</li>
-                <li>Paste them below and save</li>
-              </ol>
-              <p className="mt-2 text-sm">
-                <strong>Note:</strong> All payments from customers will go directly to your Razorpay account.
-              </p>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <strong>Quick Setup (5 Minutes):</strong>
+                  <div className="mt-2 space-y-2 text-sm">
+                    <p>
+                      <strong className="text-green-700">✓ No website verification needed!</strong> Just get your Razorpay test keys and paste them below.
+                    </p>
+                    <ol className="list-decimal list-inside ml-2 mt-1 space-y-1">
+                      <li>Sign up at <a href="https://razorpay.com" target="_blank" rel="noopener noreferrer" className="underline font-medium">razorpay.com</a></li>
+                      <li>Go to <strong>Settings → API Keys → Test Mode</strong></li>
+                      <li>Copy your <strong>Key ID</strong> and <strong>Key Secret</strong></li>
+                      <li>Paste them below and save</li>
+                    </ol>
+                  </div>
+                </div>
+                <Link href="/store/settings/razorpay-guide">
+                  <Button variant="outline" size="sm" className="ml-4 bg-white hover:bg-blue-100">
+                    Detailed Guide
+                  </Button>
+                </Link>
+              </div>
             </AlertDescription>
           </Alert>
 
@@ -162,14 +174,21 @@ export default function StoreSettingsPage() {
                   <Input
                     id="razorpayKeyId"
                     type="text"
-                    placeholder="rzp_test_xxxxx or rzp_live_xxxxx"
+                    placeholder="rzp_test_xxxxx (for testing) or rzp_live_xxxxx (for production)"
                     value={razorpayKeyId}
                     onChange={(e) => setRazorpayKeyId(e.target.value)}
                     disabled={isSaving}
                     className="bg-white"
                     required
                   />
-                  <p className="text-xs text-slate-500">Your Razorpay Key ID (starts with rzp_test_ or rzp_live_)</p>
+                  <p className="text-xs text-slate-500">
+                    Your Razorpay Key ID from Settings → API Keys
+                    {razorpayKeyId && (
+                      <span className={`ml-2 font-medium ${razorpayKeyId.startsWith('rzp_test_') ? 'text-green-600' : razorpayKeyId.startsWith('rzp_live_') ? 'text-blue-600' : 'text-amber-600'}`}>
+                        {razorpayKeyId.startsWith('rzp_test_') ? '✓ Test Mode' : razorpayKeyId.startsWith('rzp_live_') ? '✓ Live Mode' : '⚠ Check format'}
+                      </span>
+                    )}
+                  </p>
                 </div>
 
                 {/* Razorpay Key Secret */}
@@ -188,10 +207,12 @@ export default function StoreSettingsPage() {
                     required={!hasExistingKeys}
                   />
                   <p className="text-xs text-slate-500">
-                    Your Razorpay Key Secret (keep this secure, never share it publicly)
+                    Your Razorpay Key Secret from Settings → API Keys
                     {hasExistingKeys && (
                       <span className="text-blue-600 ml-1 font-medium">(Leave blank to keep existing secret)</span>
                     )}
+                    <br />
+                    <span className="text-amber-600">🔒 Keep this secure - never share it publicly</span>
                   </p>
                 </div>
 
